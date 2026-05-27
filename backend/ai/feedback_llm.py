@@ -1,7 +1,29 @@
 import os
-from groq import Groq
 import re
+from groq import Groq
+
+
 MODEL_NAME = "llama-3.1-8b-instant"
+
+
+def clean_bullets(text: str):
+    lines = text.split("\n")
+
+    cleaned = []
+
+    for line in lines:
+        line = line.strip()
+
+        line = re.sub(
+            r"^[\-\*\d\.\)\s]+",
+            "",
+            line
+        )
+
+        if line:
+            cleaned.append(line)
+
+    return "\n".join(cleaned[:4])
 
 
 def generate_feedback_groq(
@@ -11,105 +33,131 @@ def generate_feedback_groq(
     accuracy: float,
     question: str = "",
     expected_text: str = "",
-    **kwargs  # 🔥 accepts extra unused params safely
+    role: str = "Candidate",
+    **kwargs
 ):
+    """
+    Generates:
+    - professional interview feedback
+    - improved interview answer
+    """
+
     api_key = os.getenv("GROQ_API_KEY")
+
     if not api_key:
         raise Exception("GROQ_API_KEY not set")
 
     client = Groq(api_key=api_key)
 
-    # -----------------------------
+    # --------------------------------
     # FEEDBACK PROMPT
-    # -----------------------------
+    # --------------------------------
     feedback_prompt = f"""
-You are an AI interview coach.
+You are a senior technical interviewer and communication coach.
 
-Evaluate the user's answer and give clear, practical feedback.
+Analyze the candidate's interview response.
 
-Question:
+Interview Question:
 {question}
 
-User Answer:
+Candidate Answer:
 {transcript}
 
-Scores (0–10):
+Evaluation Scores (0-10):
 - Fluency: {fluency}
 - Grammar: {grammar}
 - Accuracy: {accuracy}
 
-Instructions:
-- Give 3 clear improvement points
-- Be specific (not generic)
-- Focus on communication and interview performance
-- Keep it under 80 words
-
-Output format:
-- Point 1
-- Point 2
-- Point 3
-"""
-
-    feedback_res = client.chat.completions.create(
-        model=MODEL_NAME,
-        messages=[
-            {"role": "system", "content": "You are a helpful interview coach."},
-            {"role": "user", "content": feedback_prompt},
-        ],
-        temperature=0.7,
-        max_tokens=150,
-    )
-
-    raw_feedback = (feedback_res.choices[0].message.content or "").strip()
-
-# normalize into bullet points
-    lines = raw_feedback.split("\n")
-    clean_lines = []
-
-    for line in lines:
-        line = line.strip()
-
-    # remove numbering or symbols
-        line = re.sub(r"^[\-\*\d\.\)\s]+", "", line)
-
-        if line:
-            clean_lines.append(line)
-
-    feedback_text = "\n".join(clean_lines[:3])  # max 3 points
-
-    # -----------------------------
-    # IMPROVED ANSWER
-    # -----------------------------
-    improve_prompt = f"""
-Improve the following interview answer.
-
-Question:
-{question}
-
-User Answer:
-{transcript}
+Your task:
+1. Identify communication weaknesses
+2. Identify technical/content weaknesses
+3. Suggest actionable improvements
+4. Keep feedback concise and professional
 
 Rules:
-- 3 to 4 sentences
-- Clear structure
-- Natural spoken English
-- Relevant to question
-- No labels, only answer
+- Give exactly 3 bullet points
+- Be constructive
+- Avoid generic advice
+- Focus on interview performance
+- Maximum 90 words total
 """
 
-    improve_res = client.chat.completions.create(
+    feedback_response = client.chat.completions.create(
         model=MODEL_NAME,
         messages=[
-            {"role": "system", "content": "You improve answers clearly."},
-            {"role": "user", "content": improve_prompt},
+            {
+                "role": "system",
+                "content": (
+                    "You are an expert interview evaluator."
+                )
+            },
+            {
+                "role": "user",
+                "content": feedback_prompt
+            }
         ],
-        temperature=0.6,
-        max_tokens=120,
+        temperature=0.5,
+        max_tokens=180,
     )
 
-    improved_answer = (improve_res.choices[0].message.content or "").strip()
+    raw_feedback = (
+        feedback_response
+        .choices[0]
+        .message.content or ""
+    ).strip()
+
+    feedback = clean_bullets(raw_feedback)
+
+    # --------------------------------
+    # IMPROVED ANSWER PROMPT
+    # --------------------------------
+    improve_prompt = f"""
+You are helping a candidate improve an interview response.
+
+Interview Question:
+{question}
+
+Original Answer:
+{transcript}
+
+Rewrite the answer professionally.
+
+Requirements:
+- Natural spoken English
+- Confident tone
+- Clear structure
+- Technically relevant
+- 4-6 sentences
+- Sound like a real interview answer
+- Do NOT use bullet points
+- Do NOT add labels
+"""
+
+    improve_response = client.chat.completions.create(
+        model=MODEL_NAME,
+        messages=[
+            {
+                "role": "system",
+                "content": (
+                    "You improve interview answers professionally."
+                )
+            },
+            {
+                "role": "user",
+                "content": improve_prompt
+            }
+        ],
+        temperature=0.6,
+        max_tokens=220,
+    )
+
+    improved_answer = (
+        improve_response
+        .choices[0]
+        .message.content or ""
+    ).strip()
 
     return {
-        "feedback": feedback_text,
+        "feedback": feedback,
         "improved_answer": improved_answer,
     }

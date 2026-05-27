@@ -1,65 +1,132 @@
 import re
+from collections import Counter
+
+
+STOPWORDS = {
+    "the", "is", "are", "a", "an", "to", "of",
+    "and", "in", "on", "for", "with", "that",
+    "this", "it", "as", "was", "were", "be",
+    "have", "has", "had", "at", "by", "from"
+}
+
+
+def extract_keywords(text: str):
+    words = re.findall(r"\b[a-zA-Z']+\b", text.lower())
+
+    keywords = [
+        w for w in words
+        if w not in STOPWORDS and len(w) > 2
+    ]
+
+    return keywords
 
 
 def compute_accuracy_details(transcript: str, question: str) -> dict:
     """
-    Computes how relevant the user's answer is to the question.
-    Designed for interview-style answers (no fixed expected answer).
+    Evaluates how relevant the user's answer is
+    to the interview question.
+
+    Factors:
+    - keyword relevance
+    - semantic coverage
+    - answer completeness
+    - vocabulary quality
+    - response length
     """
 
-    t = (transcript or "").lower().strip()
-    q = (question or "").lower().strip()
+    transcript = (transcript or "").strip()
+    question = (question or "").strip()
 
-    words = re.findall(r"\w+", t)
-    q_words = set(re.findall(r"\w+", q))
-
-    word_count = len(words)
-
-    if not t or not q:
+    if not transcript or not question:
         return {
             "score": 0.0,
             "matched_keywords": [],
             "missing_keywords": [],
             "keyword_coverage": 0.0,
-            "similarity": 0.0,
+            "relevance_ratio": 0.0,
         }
 
-    # -------------------------
-    # KEYWORD MATCH (QUESTION BASED)
-    # -------------------------
-    matched = []
-    missing = []
+    # --------------------------------
+    # KEYWORD EXTRACTION
+    # --------------------------------
+    answer_keywords = extract_keywords(transcript)
+    question_keywords = extract_keywords(question)
 
-    for kw in q_words:
-        if kw in t:
-            matched.append(kw)
-        else:
-            missing.append(kw)
+    answer_set = set(answer_keywords)
+    question_set = set(question_keywords)
 
-    coverage = len(matched) / max(1, len(q_words))
+    # --------------------------------
+    # MATCHING
+    # --------------------------------
+    matched = sorted(list(answer_set & question_set))
+    missing = sorted(list(question_set - answer_set))
 
-    # -------------------------
-    # SIMPLE SIMILARITY (WORD OVERLAP)
-    # -------------------------
-    overlap = len(set(words) & q_words)
-    similarity = overlap / max(1, len(q_words))
+    coverage = (
+        len(matched) / max(1, len(question_set))
+    )
 
-    # -------------------------
+    # --------------------------------
+    # WORD QUALITY
+    # --------------------------------
+    word_count = len(answer_keywords)
+
+    unique_ratio = (
+        len(set(answer_keywords)) /
+        max(1, word_count)
+    )
+
+    # --------------------------------
+    # RELEVANCE RATIO
+    # --------------------------------
+    relevant_words = sum(
+        1 for w in answer_keywords
+        if w in question_set
+    )
+
+    relevance_ratio = (
+        relevant_words / max(1, word_count)
+    )
+
+    # --------------------------------
     # BASE SCORE
-    # -------------------------
-    score = (0.7 * coverage + 0.3 * similarity) * 10
+    # --------------------------------
+    score = 0
 
-    # -------------------------
-    # LENGTH ADJUSTMENT
-    # -------------------------
-    if word_count < 5:
-        score -= 2
-    elif word_count > 15:
+    # keyword coverage
+    score += coverage * 5
+
+    # relevance
+    score += relevance_ratio * 3
+
+    # vocabulary richness
+    if unique_ratio > 0.7:
         score += 1
 
-    # -------------------------
-    # CLAMP SCORE
-    # -------------------------
+    # sufficient explanation
+    if word_count > 15:
+        score += 1
+
+    # --------------------------------
+    # PENALTIES
+    # --------------------------------
+    if word_count < 5:
+        score -= 3
+    elif word_count < 10:
+        score -= 1.5
+
+    # repetitive response
+    repeated_words = [
+        word
+        for word, count in Counter(answer_keywords).items()
+        if count >= 4
+    ]
+
+    if repeated_words:
+        score -= 1
+
+    # --------------------------------
+    # CLAMP
+    # --------------------------------
     score = max(0.0, min(10.0, round(score, 2)))
 
     return {
@@ -67,9 +134,14 @@ def compute_accuracy_details(transcript: str, question: str) -> dict:
         "matched_keywords": matched,
         "missing_keywords": missing,
         "keyword_coverage": round(coverage, 3),
-        "similarity": round(similarity, 3),
+        "relevance_ratio": round(relevance_ratio, 3),
     }
 
 
 def compute_accuracy_score(transcript: str, question: str) -> float:
-    return float(compute_accuracy_details(transcript, question)["score"])
+    return float(
+        compute_accuracy_details(
+            transcript,
+            question
+        )["score"]
+    )

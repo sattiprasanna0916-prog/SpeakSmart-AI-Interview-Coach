@@ -2,76 +2,107 @@ import re
 
 
 def compute_grammar_score(transcript: str) -> float:
-    t = (transcript or "").strip()
+    """
+    Computes grammar quality score (0–10)
+    using lightweight NLP/rule-based checks.
 
-    if not t:
+    Focus areas:
+    - sentence structure
+    - capitalization
+    - punctuation
+    - repeated words
+    - vocabulary richness
+    - minimum meaningful response
+    """
+
+    if not transcript:
         return 0.0
 
-    words = re.findall(r"[a-zA-Z']+", t.lower())
-    wc = len(words)
+    text = transcript.strip()
 
-    score = 8.0  # start lower (more realistic baseline)
+    if len(text) < 3:
+        return 0.0
 
-    # -------------------------
-    # 1. Sentence basics
-    # -------------------------
-    if not t[0].isupper():
-        score -= 1
+    score = 7.0  # strong baseline
 
-    if not re.search(r"[.!?]$", t):
-        score -= 1
+    # --------------------------------
+    # TOKENIZATION
+    # --------------------------------
+    words = re.findall(r"\b[a-zA-Z']+\b", text)
+    word_count = len(words)
 
-    # -------------------------
-    # 2. Repetition errors
-    # -------------------------
-    if re.search(r"\b(\w+)\s+\1\b", t.lower()):
+    if word_count == 0:
+        return 0.0
+
+    lower_words = [w.lower() for w in words]
+
+    # --------------------------------
+    # SHORT ANSWER PENALTY
+    # --------------------------------
+    if word_count < 5:
+        score -= 3
+    elif word_count < 10:
+        score -= 1.5
+
+    # --------------------------------
+    # SENTENCE STRUCTURE
+    # --------------------------------
+    sentences = re.split(r"[.!?]+", text)
+    sentences = [s.strip() for s in sentences if s.strip()]
+
+    if len(sentences) == 0:
         score -= 2
 
-    # -------------------------
-    # 3. Very short or broken sentences
-    # -------------------------
-    if wc < 4:
+    # --------------------------------
+    # CAPITALIZATION CHECK
+    # --------------------------------
+    if text[0].islower():
+        score -= 0.5
+
+    # --------------------------------
+    # PUNCTUATION CHECK
+    # --------------------------------
+    if text[-1] not in ".!?":
+        score -= 0.5
+
+    # --------------------------------
+    # REPEATED WORDS
+    # --------------------------------
+    repeated_penalty = 0
+
+    for i in range(1, len(lower_words)):
+        if lower_words[i] == lower_words[i - 1]:
+            repeated_penalty += 0.5
+
+    score -= min(repeated_penalty, 2)
+
+    # --------------------------------
+    # VOCABULARY RICHNESS
+    # --------------------------------
+    unique_ratio = len(set(lower_words)) / word_count
+
+    if unique_ratio < 0.45:
         score -= 2
-    elif wc < 8:
+    elif unique_ratio < 0.6:
         score -= 1
+    elif unique_ratio > 0.8 and word_count > 12:
+        score += 0.5
 
-    # -------------------------
-    # 4. Word diversity (basic quality)
-    # -------------------------
-    unique_ratio = len(set(words)) / max(1, wc)
+    # --------------------------------
+    # BASIC CONNECTORS
+    # --------------------------------
+    connectors = {
+        "because", "therefore", "however",
+        "although", "moreover", "instead",
+        "additionally", "while", "whereas"
+    }
 
-    if unique_ratio < 0.5:
-        score -= 2
-    elif unique_ratio < 0.7:
-        score -= 1
+    if any(c in lower_words for c in connectors):
+        score += 0.5
 
-    # -------------------------
-    # 5. Simple grammar mistake patterns
-    # -------------------------
-    common_errors = [
-        r"\bi is\b",
-        r"\bhe go\b",
-        r"\bshe go\b",
-        r"\bthey is\b",
-        r"\bi done\b",
-        r"\bi did went\b"
-    ]
+    # --------------------------------
+    # CLAMP FINAL SCORE
+    # --------------------------------
+    score = max(0.0, min(10.0, round(score, 2)))
 
-    for pattern in common_errors:
-        if re.search(pattern, t.lower()):
-            score -= 2
-
-    # -------------------------
-    # 6. Sentence structure check
-    # -------------------------
-    sentences = [s.strip() for s in re.split(r"[.!?]+", t) if s.strip()]
-
-    if len(sentences) == 1 and wc > 15:
-        score -= 1  # long unstructured sentence
-
-    # -------------------------
-    # 7. Clamp score
-    # -------------------------
-    score = max(0.0, min(10.0, score))
-
-    return round(score, 2)
+    return score
