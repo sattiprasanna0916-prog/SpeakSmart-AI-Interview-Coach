@@ -1,17 +1,17 @@
-from fastapi import APIRouter
-from pydantic import BaseModel
+from fastapi import APIRouter,HTTPException
+from pydantic import BaseModel,Field
 from backend.ai.question_generator import generate_question, generate_followup_question
 router = APIRouter(prefix="/question", tags=["Question"])
 
 
 class QuestionRequest(BaseModel):
-    level: str
-    category: str
-    role: str
+    level: str = Field(..., min_length=1)
+    category: str = Field(..., min_length=1)
+    role: str = Field(..., min_length=1)
 class FollowupRequest(BaseModel):
-    previous_question: str
-    user_answer: str
-    role: str
+    previous_question: str = Field(..., min_length=3)
+    user_answer: str = Field(..., min_length=3)
+    role: str = Field(..., min_length=1)
     hint: str = ""
 @router.post("/generate")
 def generate_question_api(req: QuestionRequest):
@@ -30,10 +30,10 @@ def generate_question_api(req: QuestionRequest):
     except Exception as e:
         print("[Question API Error]:", e)
 
-        return {
-            "status": "error",
-            "question": "Unable to generate question right now."
-        }
+        raise HTTPException(
+            status_code=500,
+            detail="Unable to generate question"
+        )
 @router.post("/followup")
 def generate_followup_api(req: FollowupRequest):
     try:
@@ -52,7 +52,7 @@ def generate_followup_api(req: FollowupRequest):
     except Exception as e:
         print("[Followup API Error]:", e)
 
-        return {
-            "status": "error",
-            "question": "Unable to generate follow-up question."
-        }
+        raise HTTPException(
+            status_code=500,
+            detail="Unable to generate follow-up question"
+        )

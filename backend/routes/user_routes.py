@@ -30,16 +30,24 @@ class LoginRequest(BaseModel):
 # -----------------------------
 @router.post("/register")
 def register_user_route(payload: UserRegisterRequest):
-    user = register_user(
-        email=payload.email,
-        branch=payload.branch,
-        current_level=payload.current_level
-    )
+    try:
+        user = register_user(
+            email=payload.email,
+            branch=payload.branch,
+            current_level=payload.current_level
+        )
 
-    return {
-        "user": user
-    }
+        return {
+            "status": "success",
+            "user": user
+        }
+    except Exception as e:
+        print("Registration error:", e)
 
+        raise HTTPException(
+            status_code=500,
+            detail="Registration failed"
+        )
 
 # -----------------------------
 # LOGIN (TOKEN GENERATION)
@@ -62,6 +70,7 @@ def login_user(payload: LoginRequest):
     })
 
     return {
+        "status": "success",
         "access_token": token,
         "token_type": "bearer",
         "user": user
@@ -76,7 +85,10 @@ def get_user_by_email_route(email: EmailStr = Body(...)):
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
 
-    return user
+    return {
+        "status": "success",
+        "user": user
+    }
 
 
 # -----------------------------
@@ -89,4 +101,7 @@ def get_user_route(user_id: int):
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
 
-    return user
+    return {
+        "status": "success",
+        "user": user
+    }
