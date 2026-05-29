@@ -1,40 +1,86 @@
-from datetime import datetime, timedelta
-from jose import jwt, JWTError
-from fastapi import HTTPException, Depends
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 import os
+from datetime import datetime, timedelta
 
-SECRET_KEY = "dev_secret_key"
+from jose import jwt, JWTError
+from fastapi import (
+    HTTPException,
+    Depends
+)
+from fastapi.security import (
+    HTTPBearer,
+    HTTPAuthorizationCredentials
+)
+
+
+# --------------------------------
+# CONFIG
+# --------------------------------
+SECRET_KEY = os.getenv(
+    "JWT_SECRET",
+    "dev_secret_key"
+)
+
 ALGORITHM = "HS256"
+
 ACCESS_TOKEN_EXPIRE_MINUTES = 60
+
 
 security = HTTPBearer()
 
+
+# --------------------------------
+# CREATE ACCESS TOKEN
+# --------------------------------
 def create_access_token(data: dict):
-    to_encode = data.copy()
-    expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    
-    to_encode.update({
+
+    payload = data.copy()
+
+    expire = datetime.utcnow() + timedelta(
+        minutes=ACCESS_TOKEN_EXPIRE_MINUTES
+    )
+
+    payload.update({
         "exp": expire,
-        "type": "access",
+        "type": "access"
     })
-    
-    return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
-def verify_token(credentials: HTTPAuthorizationCredentials = Depends(security)):
-    token = credentials.credentials
+
+    token = jwt.encode(
+        payload,
+        SECRET_KEY,
+        algorithm=ALGORITHM
+    )
+
+    return token
+
+
+# --------------------------------
+# VERIFY TOKEN
+# --------------------------------
+def verify_token(
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+
     try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        token = credentials.credentials
 
-        print("DECODED PAYLOAD:", payload)  # 👈 DEBUG
+        payload = jwt.decode(
+            token,
+            SECRET_KEY,
+            algorithms=[ALGORITHM]
+        )
 
-        user_id = payload.get("sub")   # ✅ MUST BE sub
+        user_id = payload.get("sub")
 
-        if user_id is None:
-            raise HTTPException(status_code=401, detail="Invalid token")
+        if not user_id:
+            raise HTTPException(
+                status_code=401,
+                detail="Invalid token"
+            )
 
         return payload
 
-    except JWTError as e:
-        print("JWT ERROR:", e)  # 👈 VERY IMPORTANT
-        raise HTTPException(status_code=401, detail="Invalid token")
-
+    except JWTError:
+        raise HTTPException(
+            status_code=401,
+            detail="Token expired or invalid"
+        )

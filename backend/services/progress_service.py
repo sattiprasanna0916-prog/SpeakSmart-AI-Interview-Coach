@@ -1,100 +1,135 @@
-from backend.db import get_connection
 from datetime import datetime, timedelta
 
-
-# -------------------------
-# LEVEL NORMALIZATION
-# -------------------------
-def _normalize_level(level: str) -> str:
-    s = str(level or "").strip().lower()
-    if s in ["1", "beginner"]:
-        return "Beginner"
-    if s in ["2", "intermediate"]:
-        return "Intermediate"
-    if s in ["3", "advanced"]:
-        return "Advanced"
-    return "Beginner"
+from backend.db import get_connection
 
 
-# -------------------------
-# GET CURRENT LEVEL (SQL)
-# -------------------------
+# --------------------------------
+# NORMALIZE LEVEL
+# --------------------------------
+def normalize_level(level: str) -> str:
+
+    value = str(level or "").strip().lower()
+
+    mapping = {
+        "1": "Beginner",
+        "2": "Intermediate",
+        "3": "Advanced",
+        "beginner": "Beginner",
+        "intermediate": "Intermediate",
+        "advanced": "Advanced",
+    }
+
+    return mapping.get(value, "Beginner")
+
+
+# --------------------------------
+# GET CURRENT LEVEL
+# --------------------------------
 def get_current_level(user_id: int) -> str:
+
     conn = get_connection()
     cur = conn.cursor()
 
-    cur.execute("SELECT current_level FROM users WHERE user_id = ?", (user_id,))
-    row = cur.fetchone()
+    try:
+        cur.execute(
+            """
+            SELECT current_level
+            FROM users
+            WHERE user_id = ?
+            """,
+            (user_id,)
+        )
 
-    conn.close()
+        row = cur.fetchone()
 
-    if not row:
-        return "Beginner"
+        if not row:
+            return "Beginner"
 
-    return _normalize_level(row["current_level"])
+        return normalize_level(
+            row["current_level"]
+        )
+
+    finally:
+        conn.close()
 
 
-# -------------------------
-# LOAD ATTEMPTS (SQL)
-# -------------------------
-def _load_attempts(user_id: int):
+# --------------------------------
+# LOAD USER ATTEMPTS
+# --------------------------------
+def load_attempts(user_id: int):
+
     conn = get_connection()
     cur = conn.cursor()
 
-    cur.execute("""
-        SELECT *
-        FROM attempts
-        WHERE user_id = ?
-        ORDER BY created_at
-    """, (user_id,))
+    try:
+        cur.execute(
+            """
+            SELECT *
+            FROM attempts
+            WHERE user_id = ?
+            ORDER BY created_at
+            """,
+            (user_id,)
+        )
 
-    rows = cur.fetchall()
-    conn.close()
+        rows = cur.fetchall()
 
-    return [dict(r) for r in rows]
+        return [dict(r) for r in rows]
+
+    finally:
+        conn.close()
 
 
-# -------------------------
-# STREAK CALCULATION
-# -------------------------
-def _calc_streak_days(rows):
+# --------------------------------
+# CALCULATE STREAK
+# --------------------------------
+def calculate_streak(rows):
+
     if not rows:
         return 0
 
     try:
         dates = [
-            datetime.fromisoformat(r["created_at"]).date()
-            for r in rows if r.get("created_at")
+            datetime.fromisoformat(
+                row["created_at"]
+            ).date()
+            for row in rows
+            if row.get("created_at")
         ]
 
         unique_dates = sorted(set(dates))
+
         if not unique_dates:
             return 0
 
         today = datetime.now().date()
-        streak = 0
-        current = today
 
-        for d in reversed(unique_dates):
-            if d == current:
+        streak = 0
+        current_day = today
+
+        for day in reversed(unique_dates):
+
+            if day == current_day:
                 streak += 1
-                current = current - timedelta(days=1)
-            elif d < current:
+                current_day -= timedelta(days=1)
+
+            elif day < current_day:
                 break
 
         return streak
 
-    except Exception as e:
-        print("STREAK ERROR:", e)
+    except Exception:
         return 0
 
 
-# -------------------------
-# MAIN PROGRESS FUNCTION
-# -------------------------
+# --------------------------------
+# COMPUTE USER PROGRESS
+# --------------------------------
 def compute_progress(user_id: int):
+
     current_level = get_current_level(user_id)
-    rows = _load_attempts(user_id)
+
+    rows = load_attempts(user_id)
 
     if not rows:
         return {
@@ -110,68 +145,100 @@ def compute_progress(user_id: int):
             "history_scores": [],
         }
 
-    # -------------------------
-    # Extract values
-    # -------------------------
-    flu = [r.get("fluency_score", 0) or 0 for r in rows]
-    gra = [r.get("grammar_score", 0) or 0 for r in rows]
-    acc = [r.get("accuracy_score", 0) or 0 for r in rows]
+    # --------------------------------
+    # SCORES
+    # --------------------------------
+    fluency_scores = [
+        row.get("fluency_score", 0) or 0
+        for row in rows
+    ]
 
-    avg_flu = sum(flu) / len(flu)
-    avg_gra = sum(gra) / len(gra)
-    avg_acc = sum(acc) / len(acc)
+    grammar_scores = [
+        row.get("grammar_score", 0) or 0
+        for row in rows
+    ]
 
-    avg_final = (avg_flu + avg_gra + avg_acc) / 3
+    accuracy_scores = [
+        row.get("accuracy_score", 0) or 0
+        for row in rows
+    ]
 
-    # -------------------------
-    # Weakest skill
-    # -------------------------
+    avg_fluency = (
+        sum(fluency_scores) /
+        len(fluency_scores)
+    )
+
+    avg_grammar = (
+        sum(grammar_scores) /
+        len(grammar_scores)
+    )
+
+    avg_accuracy = (
+        sum(accuracy_scores) /
+        len(accuracy_scores)
+    )
+
+    avg_final = (
+        avg_fluency +
+        avg_grammar +
+        avg_accuracy
+    ) / 3
+
+    # --------------------------------
+    # WEAKEST SKILL
+    # --------------------------------
     skills = {
-        "Fluency": avg_flu,
-        "Grammar": avg_gra,
-        "Accuracy": avg_acc
+        "Fluency": avg_fluency,
+        "Grammar": avg_grammar,
+        "Accuracy": avg_accuracy,
     }
 
-    weakest_skill = min(skills, key=skills.get)
+    weakest_skill = min(
+        skills,
+        key=skills.get
+    )
 
-    # -------------------------
-    # Streak
-    # -------------------------
-    streak_days = _calc_streak_days(rows)
+    # --------------------------------
+    # STREAK
+    # --------------------------------
+    streak_days = calculate_streak(rows)
 
-    # -------------------------
-    # Chart data (last 10)
-    # -------------------------
-    last = rows[-10:]
+    # --------------------------------
+    # CHART DATA
+    # --------------------------------
+    recent_rows = rows[-10:]
 
     history_labels = [
-        r["created_at"][5:10] if r.get("created_at") else ""
-        for r in last
+        row["created_at"][5:10]
+        if row.get("created_at")
+        else ""
+        for row in recent_rows
     ]
 
     history_scores = [
         round(
-            (r.get("fluency_score", 0) +
-             r.get("grammar_score", 0) +
-             r.get("accuracy_score", 0)) / 3,
+            (
+                row.get("fluency_score", 0) +
+                row.get("grammar_score", 0) +
+                row.get("accuracy_score", 0)
+            ) / 3,
             2
         )
-        for r in last
+        for row in recent_rows
     ]
 
-    # -------------------------
-    # FINAL RESPONSE
-    # -------------------------
     return {
         "current_level": current_level,
+
         "total_attempts": len(rows),
 
-        "avg_fluency": round(avg_flu, 2),
-        "avg_grammar": round(avg_gra, 2),
-        "avg_accuracy": round(avg_acc, 2),
+        "avg_fluency": round(avg_fluency, 2),
+        "avg_grammar": round(avg_grammar, 2),
+        "avg_accuracy": round(avg_accuracy, 2),
         "avg_final": round(avg_final, 2),
 
         "weakest_skill": weakest_skill,
+
         "streak_days": streak_days,
 
         "history_labels": history_labels,
