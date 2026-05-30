@@ -1,14 +1,18 @@
 fastapi
 uvicorn[standard]
+
 pydantic
-python-multipart
-pandas
-numpy
 email-validator
+python-multipart
+
+python-jose[cryptography]
+passlib[bcrypt]
+
+groq
+httpx
+
+numpy
+pandas
 
 librosa
 soundfile
-
-groq
-python-jose[cryptography]
-passlib[bcrypt]

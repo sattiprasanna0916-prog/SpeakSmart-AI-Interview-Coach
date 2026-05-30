@@ -1,34 +1,89 @@
-from fastapi import APIRouter, UploadFile, File, Form, HTTPException, Depends
-import tempfile
+from fastapi import (
+    APIRouter,
+    UploadFile,
+    File,
+    Form,
+    HTTPException,
+    Depends
+)
+
 import os
+import tempfile
 
-from backend.services.auth_service import verify_token
+from backend.services.auth_service import (
+    verify_token
+)
 
-# AI
-from backend.ai.audio_convert import ensure_wav_16k_mono
-from backend.ai.transformer_scorer import score_from_audio_transformer
-from backend.ai.speech_to_text import transcribe_audio
-from backend.ai.feedback_llm import generate_feedback_groq
-from backend.ai.speech_metrics import compute_audio_metrics
-from backend.ai.grammar_score import compute_grammar_score
-from backend.ai.accuracy_score import compute_accuracy_details
+# --------------------------------
+# AI MODULES
+# --------------------------------
+from backend.ai.audio_convert import (
+    ensure_wav_16k_mono
+)
 
-# Services
-from backend.services.attempt_service import save_attempt, get_user_attempts
-from backend.services.user_service import get_user
-from backend.services.evaluation_service import evaluate_and_update_level
+from backend.ai.speech_to_text import (
+    transcribe_audio
+)
 
-router = APIRouter(prefix="/attempts", tags=["Attempts"])
+from backend.ai.feedback_llm import (
+    generate_feedback_groq
+)
 
-# 🔧 CONFIG
-ALLOWED_EXTENSIONS = {".wav", ".mp3", ".m4a", ".webm"}
-MAX_FILE_SIZE = 10 * 1024 * 1024  # 10MB
+from backend.ai.speech_metrics import (
+    compute_audio_metrics
+)
+
+from backend.ai.grammar_score import (
+    compute_grammar_score
+)
+
+from backend.ai.accuracy_score import (
+    compute_accuracy_details
+)
+
+# --------------------------------
+# SERVICES
+# --------------------------------
+from backend.services.attempt_service import (
+    save_attempt,
+    get_user_attempts
+)
+
+from backend.services.user_service import (
+    get_user
+)
+
+from backend.services.evaluation_service import (
+    evaluate_and_update_level
+)
+
+
+router = APIRouter(
+    prefix="/attempts",
+    tags=["Attempts"]
+)
+
+
+# --------------------------------
+# CONFIG
+# --------------------------------
+ALLOWED_EXTENSIONS = {
+    ".wav",
+    ".mp3",
+    ".m4a",
+    ".webm"
+}
+
+MAX_FILE_SIZE = 10 * 1024 * 1024
 
 FLUENCY_WEIGHT = 0.3
 GRAMMAR_WEIGHT = 0.3
 ACCURACY_WEIGHT = 0.4
 
 
+# --------------------------------
+# SUBMIT INTERVIEW ATTEMPT
+# --------------------------------
 @router.post("/submit")
 async def submit_attempt(
     level: str = Form(...),
@@ -36,193 +91,343 @@ async def submit_attempt(
     audio: UploadFile = File(...),
     token_data: dict = Depends(verify_token),
 ):
-    tmp_path = None
+
+    temp_input_path = None
     wav_path = None
 
-    # 🔐 Secure user from JWT
-    # 🔐 Secure user from JWT
+    # --------------------------------
+    # AUTH VALIDATION
+    # --------------------------------
     user_id = token_data.get("sub")
 
     if not user_id:
-        raise HTTPException(status_code=401, detail="Invalid token")
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid token"
+        )
 
     try:
-        user_id = int(user_id)   # ✅ safe conversion
-    except:
-        raise HTTPException(status_code=401, detail="Invalid token")
+        user_id = int(user_id)
 
-    if not get_user(user_id):
-        raise HTTPException(status_code=401, detail="Invalid user")
+    except Exception:
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid token"
+        )
+
+    user = get_user(user_id)
+
+    if not user:
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid user"
+        )
 
     try:
-        # -----------------------------
-        # 🔒 AUDIO VALIDATION
-        # -----------------------------
-        filename = (audio.filename or "").lower()
-        ext = os.path.splitext(filename)[-1]
 
-        if ext not in ALLOWED_EXTENSIONS:
-            raise HTTPException(status_code=400, detail="Unsupported audio format")
+        # --------------------------------
+        # FILE VALIDATION
+        # --------------------------------
+        filename = (
+            audio.filename or ""
+        ).lower()
+
+        extension = os.path.splitext(
+            filename
+        )[-1]
+
+        if extension not in ALLOWED_EXTENSIONS:
+            raise HTTPException(
+                status_code=400,
+                detail="Unsupported audio format"
+            )
 
         content = await audio.read()
 
         if len(content) > MAX_FILE_SIZE:
-            raise HTTPException(status_code=400, detail="File too large (max 10MB)")
-
-        # -----------------------------
-        # 1️⃣ SAVE TEMP FILE
-        # -----------------------------
-        suffix = ext if ext else ".wav"
-
-        with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
-            tmp.write(content)
-            tmp_path = tmp.name
-
-        # -----------------------------
-        # 2️⃣ CONVERT TO WAV
-        # -----------------------------
-        wav_path = ensure_wav_16k_mono(tmp_path)
-
-        # -----------------------------
-        # 3️⃣ SPEECH TO TEXT
-        # -----------------------------
-        transcript = (transcribe_audio(wav_path) or "").strip()
-
-        if not transcript or transcript.lower() in ["no speech detected", "silence"]:
             raise HTTPException(
                 status_code=400,
-                detail="No clear speech detected. Please speak clearly."
+                detail="File size exceeds 10MB"
             )
 
-        # -----------------------------
-        # 4️⃣ SCORING PIPELINE
-        # -----------------------------
-        try:
-            metrics = compute_audio_metrics(wav_path, transcript)
-            fluency = float(metrics.get("fluency_score", 0))
+        # --------------------------------
+        # SAVE TEMP FILE
+        # --------------------------------
+        suffix = extension if extension else ".wav"
 
-# -------------------------
-# GRAMMAR
-# -------------------------
-            grammar = float(compute_grammar_score(transcript))
+        with tempfile.NamedTemporaryFile(
+            delete=False,
+            suffix=suffix
+        ) as temp_file:
 
-# -------------------------
-# ACCURACY
-# -------------------------
-            acc_details = compute_accuracy_details(transcript, question)
-            accuracy = float(acc_details.get("score", 0))
-        except Exception as e:
-            raise HTTPException(
-                status_code=500,
-                detail=f"Processing error: {str(e)}"
-            )
+            temp_file.write(content)
 
-        # Reject too short audio
-        if float(metrics.get("audio_duration", 0)) < 2.5:
+            temp_input_path = temp_file.name
+
+        # --------------------------------
+        # AUDIO CONVERSION
+        # --------------------------------
+        wav_path = ensure_wav_16k_mono(
+            temp_input_path
+        )
+
+        # --------------------------------
+        # SPEECH TO TEXT
+        # --------------------------------
+        transcript = (
+            transcribe_audio(wav_path) or ""
+        ).strip()
+
+        if (
+            not transcript or
+            transcript.lower() in [
+                "silence",
+                "no speech detected"
+            ]
+        ):
             raise HTTPException(
                 status_code=400,
-                detail="Audio too short. Minimum 3 seconds required."
+                detail=(
+                    "No clear speech detected. "
+                    "Please speak clearly."
+                )
             )
 
-        # -----------------------------
-        # 5️⃣ FINAL SCORE
-        # -----------------------------
+        # --------------------------------
+        # AUDIO METRICS
+        # --------------------------------
+        metrics = compute_audio_metrics(
+            wav_path,
+            transcript
+        )
+
+        audio_duration = float(
+            metrics.get("audio_duration", 0)
+        )
+
+        if audio_duration < 2.5:
+            raise HTTPException(
+                status_code=400,
+                detail=(
+                    "Audio too short. "
+                    "Minimum 3 seconds required."
+                )
+            )
+
+        # --------------------------------
+        # FLUENCY
+        # --------------------------------
+        fluency = float(
+            metrics.get("fluency_score", 0)
+        )
+
+        # --------------------------------
+        # GRAMMAR
+        # --------------------------------
+        grammar = float(
+            compute_grammar_score(transcript)
+        )
+
+        # --------------------------------
+        # ACCURACY
+        # --------------------------------
+        accuracy_details = (
+            compute_accuracy_details(
+                transcript,
+                question
+            )
+        )
+
+        accuracy = float(
+            accuracy_details.get("score", 0)
+        )
+
+        # --------------------------------
+        # FINAL SCORE
+        # --------------------------------
         final_score = round(
-            FLUENCY_WEIGHT * fluency +
-            GRAMMAR_WEIGHT * grammar +
-            ACCURACY_WEIGHT * accuracy,
+            (
+                fluency * FLUENCY_WEIGHT
+            ) +
+            (
+                grammar * GRAMMAR_WEIGHT
+            ) +
+            (
+                accuracy * ACCURACY_WEIGHT
+            ),
             2
         )
 
-        # -----------------------------
-        # 6️⃣ FEEDBACK (LLM)
-        # -----------------------------
-        fb = generate_feedback_groq(
-            transcript=transcript,
-            fluency=fluency,
-            grammar=grammar,
-            accuracy=accuracy,
-            question=question,
-            expected_text=question
+        # --------------------------------
+        # AI FEEDBACK
+        # --------------------------------
+        feedback_response = (
+            generate_feedback_groq(
+                transcript=transcript,
+                fluency=fluency,
+                grammar=grammar,
+                accuracy=accuracy,
+                question=question,
+            )
         )
 
-        feedback = fb.get("feedback", "")
-        improved_answer = fb.get("improved_answer", "")
+        feedback = feedback_response.get(
+            "feedback",
+            ""
+        )
 
-        # -----------------------------
-        # 7️⃣ IMPROVEMENT TRACKING
-        # -----------------------------
-        previous_attempts = get_user_attempts(user_id)
+        improved_answer = (
+            feedback_response.get(
+                "improved_answer",
+                ""
+            )
+        )
+
+        # --------------------------------
+        # IMPROVEMENT TRACKING
+        # --------------------------------
+        previous_attempts = (
+            get_user_attempts(user_id)
+        )
 
         previous_score = None
+
         if previous_attempts:
-            previous_score = previous_attempts[0].get("final_score")
+            previous_score = (
+                previous_attempts[0]
+                .get("final_score")
+            )
 
         improvement = 0
-        if previous_score is not None:
-            improvement = round(final_score - float(previous_score), 2)
 
-        # -----------------------------
-        # 8️⃣ SAVE ATTEMPT
-        # -----------------------------
+        if previous_score is not None:
+            improvement = round(
+                final_score -
+                float(previous_score),
+                2
+            )
+
+        # --------------------------------
+        # SAVE ATTEMPT
+        # --------------------------------
         save_attempt(
             user_id=user_id,
             level=level,
             question=question,
             answer_text=transcript,
-            audio_duration=metrics.get("audio_duration", 0),
-            pause_count=metrics.get("pause_count", 0),
-            filler_count=metrics.get("filler_count", 0),
-            speech_rate=metrics.get("speech_rate", 0),
+
+            audio_duration=metrics.get(
+                "audio_duration",
+                0
+            ),
+
+            pause_count=metrics.get(
+                "pause_count",
+                0
+            ),
+
+            filler_count=metrics.get(
+                "filler_count",
+                0
+            ),
+
+            speech_rate=metrics.get(
+                "speech_rate",
+                0
+            ),
+
             fluency_score=fluency,
             grammar_score=grammar,
             accuracy_score=accuracy,
+
             final_score=final_score,
+
             feedback=feedback,
+
             improved_answer=improved_answer,
         )
 
-        # -----------------------------
-        # 9️⃣ LEVEL UPDATE
-        # -----------------------------
-        level_update = evaluate_and_update_level(user_id)
+        # --------------------------------
+        # LEVEL UPDATE
+        # --------------------------------
+        level_update = (
+            evaluate_and_update_level(
+                user_id
+            )
+        )
 
-        # -----------------------------
-        # 🔟 RESPONSE
-        # -----------------------------
+        # --------------------------------
+        # RESPONSE
+        # --------------------------------
         return {
+            "status": "success",
+
             "transcript": transcript,
-            "fluency": round(fluency, 2),
-            "grammar": round(grammar, 2),
-            "accuracy": round(accuracy, 2),
-            "final_score": final_score,
+
+            "scores": {
+                "fluency": round(fluency, 2),
+                "grammar": round(grammar, 2),
+                "accuracy": round(accuracy, 2),
+                "final_score": final_score,
+            },
+
             "improvement": improvement,
+
             "feedback": feedback,
+
             "improved_answer": improved_answer,
+
             "audio_metrics": metrics,
+
             "level_update": level_update,
         }
 
     finally:
-        # -----------------------------
-        # 🧹 CLEANUP
-        # -----------------------------
-        if tmp_path and os.path.exists(tmp_path):
-            os.remove(tmp_path)
 
-        if wav_path and os.path.exists(wav_path):
+        # --------------------------------
+        # CLEANUP
+        # --------------------------------
+        if (
+            temp_input_path and
+            os.path.exists(temp_input_path)
+        ):
+            os.remove(temp_input_path)
+
+        if (
+            wav_path and
+            os.path.exists(wav_path)
+        ):
             os.remove(wav_path)
 
 
+# --------------------------------
+# GET USER ATTEMPTS
+# --------------------------------
 @router.get("/user/{user_id}")
-def get_attempts(user_id: int, token_data: dict = Depends(verify_token)):
-    # 🔐 Optional: ensure user can only access own data
+def get_attempts(
+    user_id: int,
+    token_data: dict = Depends(verify_token)
+):
+
     token_user = token_data.get("sub")
 
     if str(user_id) != str(token_user):
-        raise HTTPException(status_code=403, detail="Access denied")
+        raise HTTPException(
+            status_code=403,
+            detail="Access denied"
+        )
 
-    if not get_user(user_id):
-        return []
+    user = get_user(user_id)
 
-    return get_user_attempts(user_id)
+    if not user:
+        raise HTTPException(
+            status_code=404,
+            detail="User not found"
+        )
+
+    attempts = get_user_attempts(user_id)
+
+    return {
+        "status": "success",
+        "attempts": attempts
+    }

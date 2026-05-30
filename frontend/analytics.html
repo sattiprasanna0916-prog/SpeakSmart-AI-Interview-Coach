@@ -97,8 +97,28 @@
 
 </main>
 
-<script src="app.js"></script>
+<script type="module">
 
+import {
+  loadAnalytics
+} from "./js/analytics.js";
+
+import {
+  logout
+} from "./js/auth.js";
+
+window.logout = logout;
+
+document.addEventListener(
+  "DOMContentLoaded",
+  () => {
+    loadAnalytics(
+      localStorage.getItem("user_id")
+    );
+  }
+);
+
+</script>
 <script>
   // 🔐 Protect page
   if (!localStorage.getItem("user_id")) {

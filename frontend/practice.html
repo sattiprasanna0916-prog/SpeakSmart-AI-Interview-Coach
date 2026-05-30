@@ -149,7 +149,42 @@
 
 </main>
 
-<script src="app.js"></script>
+<script type="module">
+
+import {
+  startInterview,
+  submitAudio
+} from "./js/interview.js";
+
+import {
+  startRecording,
+  stopRecording
+} from "./js/recording.js";
+
+import {
+  logout
+} from "./js/auth.js";
+
+window.startInterview = startInterview;
+window.submitAudio = submitAudio;
+window.startRecording = startRecording;
+window.stopRecording = stopRecording;
+window.logout = logout;
+
+// temporary placeholders
+window.nextQuestion = () => {
+  alert("Next question feature coming soon");
+};
+
+window.endInterview = () => {
+  window.location.reload();
+};
+
+window.retryAnswer = () => {
+  alert("Retry enabled");
+};
+
+</script>
 
 <script>
 if (!localStorage.getItem("user_id")) {
