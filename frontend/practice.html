@@ -96,11 +96,6 @@
         <button id="stopBtn" class="btn stop" onclick="stopRecording()">⛔ Stop</button>
       </div>
 
-      <!-- FILE -->
-      <div class="controlGroup">
-        <input type="file" id="audioUpload" accept="audio/*" class="fileInput">
-      </div>
-
       <!-- ANALYZE -->
       <div class="controlGroup">
         <button id="analyzeBtn" class="btn success" onclick="submitAudio()">📊 Analyze</button>
@@ -115,7 +110,11 @@
     </section>
 
     <!-- RIGHT -->
-    <section id="resultSection" class="card glass aiPanel">
+    <section
+  id="resultSection"
+  class="card glass aiPanel"
+  style="display:none;"
+>
 
       <h2 class="h2">🤖 AI Analysis</h2>
 

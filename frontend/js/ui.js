@@ -18,6 +18,7 @@ export function addMessage(type, text) {
 }
 
 export function toggleResult(show) {
+  
   const section = $("resultSection");
 
   if (!section) return;
@@ -27,7 +28,7 @@ export function toggleResult(show) {
 }
 
 export function renderResult(data) {
-
+  toggleResult(true);
   const scores = data.scores || {};
 
   $("fluency").innerText =

@@ -385,3 +385,28 @@ body{
   border: 2px solid #ef4444;
   box-shadow: 0 0 12px rgba(239,68,68,0.5);
 }
+.recording{
+  animation:pulse 1s infinite;
+  background:#22c55e !important;
+  box-shadow:
+    0 0 20px #22c55e,
+    0 0 40px #22c55e;
+}
+
+@keyframes pulse{
+
+  0%{
+    transform:scale(1);
+    opacity:1;
+  }
+
+  50%{
+    transform:scale(1.15);
+    opacity:.7;
+  }
+
+  100%{
+    transform:scale(1);
+    opacity:1;
+  }
+}
