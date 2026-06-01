@@ -1,41 +1,109 @@
-@media (max-width: 768px){
+@media (max-width:1200px){
 
-  .topbar{
-    flex-direction:column;
-    align-items:flex-start;
-    gap:10px;
-  }
-
-  .navRight{
-    width:100%;
-    justify-content:space-between;
-    flex-wrap:wrap;
-  }
-
-  .container{
-    padding:15px 10px;
-  }
-
-  .heroTitleBig{
-    font-size:26px;
-  }
-
-  .featureGrid,
-  .grid4,
-  .analyticsGrid,
   .practiceGrid{
     grid-template-columns:1fr;
   }
 
-  .chatBox{
-    max-height:300px;
+  .analyticsGrid{
+    grid-template-columns:1fr;
   }
 
-  .btn{
+  .micPanel{
+    position:relative;
+    top:0;
+  }
+}
+@media (max-width:992px){
+
+  .featureGrid,
+  .grid4{
+    grid-template-columns:repeat(2,1fr);
+  }
+
+  .heroTitleBig{
+    font-size:56px;
+  }
+}
+@media (max-width:768px){
+
+  .topbar{
+    flex-direction:column;
+    align-items:flex-start;
+    gap:18px;
+    padding:20px;
+  }
+
+  .navRight{
     width:100%;
+    flex-wrap:wrap;
   }
 
+  .container{
+    width:94%;
+    padding:24px 0;
+  }
+
+  .heroTitleBig{
+    font-size:42px;
+  }
+  .featureGrid,
+  .grid4,
+  .scoreGrid{
+    grid-template-columns:1fr;
+  }
+
+  .card,
+  .tile,
   .auth-card{
+    padding:22px;
+  }
+
+  .chatPanel,
+  .aiPanel{
+    min-height:auto;
+  }
+
+  .chatBox{
+    height:400px;
+  }
+   .btn{
     width:100%;
+  }
+
+  .micCircle{
+    width:110px;
+    height:110px;
+  }
+
+  .timer{
+    font-size:26px;
+  }
+
+  .h1{
+    font-size:38px;
+  }
+}
+@media (max-width:520px){
+
+  .heroTitleBig{
+    font-size:34px;
+  }
+
+  .logo{
+    width:46px;
+    height:46px;
+  }
+
+  .brandTitle{
+    font-size:20px;
+  }
+
+  .tileVal,
+  .scoreCard h3{
+    font-size:30px;
+  }
+
+  .chat-msg{
+    max-width:100%;
   }
 }

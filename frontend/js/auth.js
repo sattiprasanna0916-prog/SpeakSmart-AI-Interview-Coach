@@ -1,35 +1,75 @@
-import { STORAGE_KEYS } from "./config.js";
 
-export function logout() {
-  localStorage.clear();
-  window.location.href = "index.html";
-}
+import { apiRequest } from "./api.js";
 
-export function getToken() {
-  return localStorage.getItem(
-    STORAGE_KEYS.TOKEN
+export async function registerUser(
+  email,
+  branch
+){
+
+  const data = await apiRequest(
+
+    "/users/register",
+
+    {
+      method:"POST",
+
+      body:JSON.stringify({
+        email,
+        branch
+      })
+    }
   );
-}
 
-export function getUserId() {
-  return localStorage.getItem(
-    STORAGE_KEYS.USER_ID
+  alert(
+    "Registration successful"
   );
+
+  return data;
 }
 
-export function saveAuth(data) {
+export async function loginUser(
+  email
+){
+
+  const data = await apiRequest(
+
+    "/users/login",
+
+    {
+      method:"POST",
+
+      body:JSON.stringify({
+        email
+      })
+    }
+  );
+
   localStorage.setItem(
-    STORAGE_KEYS.TOKEN,
+    "token",
     data.access_token
   );
 
   localStorage.setItem(
-    STORAGE_KEYS.USER_ID,
+    "user_id",
     data.user.user_id
   );
 
-  localStorage.setItem(
-    STORAGE_KEYS.USER_EMAIL,
-    data.user.email
+  window.location.href =
+    "home.html";
+
+  return data;
+}
+
+export function logout(){
+
+  localStorage.removeItem(
+    "token"
   );
+
+  localStorage.removeItem(
+    "user_id"
+  );
+
+  window.location.href =
+    "index.html";
 }

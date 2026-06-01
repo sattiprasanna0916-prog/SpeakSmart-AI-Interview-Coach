@@ -1,30 +1,51 @@
-import { API_BASE } from "./config.js";
-import { getToken } from "./auth.js";
 
-export function getAuthHeaders() {
-  const token = getToken();
-
-  return {
-    Authorization: `Bearer ${token}`
-  };
-}
+import { API_BASE }
+from "./config.js";
 
 export async function apiRequest(
+
   endpoint,
+
   options = {}
-) {
+
+){
+
+  const token =
+    localStorage.getItem("token");
+
   const response = await fetch(
+
     `${API_BASE}${endpoint}`,
-    options
+
+    {
+
+      headers:{
+
+        "Content-Type":
+          "application/json",
+
+        ...(token && {
+          Authorization:
+            `Bearer ${token}`
+        }),
+
+        ...(options.headers || {})
+      },
+
+      ...options
+    }
   );
 
-  if (!response.ok) {
-    const error = await response.json();
+  const data =
+    await response.json();
+
+  if(!response.ok){
 
     throw new Error(
-      error.detail || "Request failed"
+      data.detail ||
+      "API request failed"
     );
   }
 
-  return response.json();
+  return data;
 }

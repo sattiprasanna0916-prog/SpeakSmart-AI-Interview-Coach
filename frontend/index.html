@@ -1,31 +1,69 @@
+```html id="0a9s1r"
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>SpeakSmart • Login</title>
-  <link rel="stylesheet" href="styles.css" />
+
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
+  <title>
+    SpeakSmart • Login
+  </title>
+
+  <link rel="stylesheet" href="styles.css">
+
   <link rel="stylesheet" href="responsive.css">
+
   <link rel="icon" href="data:,">
-  <!-- Font -->
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet"
+  >
+
 </head>
 
 <body class="dark">
 
   <!-- NAVBAR -->
   <header class="topbar glass">
+
     <div class="brand">
-      <div class="logo">SS</div>
-      <div>
-        <div class="brandTitle">SpeakSmart</div>
-        <div class="brandSub">AI Interview Coach</div>
+
+      <div class="logo">
+        SS
       </div>
+
+      <div>
+
+        <div class="brandTitle">
+          SpeakSmart
+        </div>
+
+        <div class="brandSub">
+          AI Interview Coach
+        </div>
+
+      </div>
+
     </div>
 
     <nav class="navRight">
-      <a href="home.html" class="btn ghost">Home</a>
+
+      <a
+        href="home.html"
+        class="btn ghost"
+      >
+        Home
+      </a>
+
     </nav>
+
   </header>
 
   <!-- MAIN -->
@@ -35,40 +73,126 @@
 
       <!-- HEADER -->
       <div class="auth-header">
-        <h1>Welcome 👋</h1>
-        <p>Start practicing interviews with AI feedback</p>
+
+        <span class="heroTag">
+          🚀 AI-Powered Interview Practice
+        </span>
+
+        <h1>
+          Welcome Back 👋
+        </h1>
+
+        <p>
+
+          Practice interviews, improve communication,
+          and get AI-powered feedback instantly.
+
+        </p>
+
       </div>
 
       <!-- TABS -->
       <div class="auth-tabs">
-        <button class="tab active" onclick="switchTab('register')">Register</button>
-        <button class="tab" onclick="switchTab('login')">Login</button>
+
+        <button
+          class="tab active"
+          onclick="switchTab('register')"
+        >
+          Register
+        </button>
+
+        <button
+          class="tab"
+          onclick="switchTab('login')"
+        >
+          Login
+        </button>
+
       </div>
 
       <!-- REGISTER -->
-      <div id="registerForm" class="auth-form active">
+      <div
+        id="registerForm"
+        class="auth-form active"
+      >
 
-        <label>Email</label>
-        <input type="email" id="regEmail" placeholder="you@example.com" required/>
+        <label>
+          Email Address
+        </label>
 
-        <label>Branch</label>
-        <input type="text" id="regBranch" placeholder="CSE / IT" required/>
+        <input
+          type="email"
+          id="regEmail"
+          placeholder="you@example.com"
+          required
+        >
 
-        <button id="registerBtn" class="btn primary full glow" onclick="handleRegister()">
-          Create Account →
+        <label>
+          Branch / Domain
+        </label>
+
+        <input
+          type="text"
+          id="regBranch"
+          placeholder="CSE / AIML / IT"
+          required
+        >
+
+        <button
+          id="registerBtn"
+          class="btn primary full glow"
+          onclick="handleRegister()"
+        >
+
+          🚀 Create Account
+
         </button>
 
       </div>
 
       <!-- LOGIN -->
-      <div id="loginForm" class="auth-form">
+      <div
+        id="loginForm"
+        class="auth-form"
+      >
 
-        <label>Email</label>
-        <input type="email" id="loginEmail" placeholder="you@example.com" required/>
+        <label>
+          Email Address
+        </label>
 
-        <button id="loginBtn" class="btn full glow" onclick="handleLogin()">
-          Continue →
+        <input
+          type="email"
+          id="loginEmail"
+          placeholder="you@example.com"
+          required
+        >
+
+        <button
+          id="loginBtn"
+          class="btn success full glow"
+          onclick="handleLogin()"
+        >
+
+          🔐 Continue
+
         </button>
+
+      </div>
+
+      <!-- EXTRA -->
+      <div
+        style="
+          margin-top:28px;
+          text-align:center;
+          color:#94a3b8;
+          line-height:1.7;
+          font-size:14px;
+        "
+      >
+
+        Practice smarter with AI-powered
+        interview simulations and
+        personalized communication feedback.
 
       </div>
 
@@ -76,281 +200,174 @@
 
   </main>
 
-  <!-- SCRIPT -->
+  <!-- TAB SWITCH -->
   <script>
-    // 🔐 Auto-redirect if already logged in
-    window.addEventListener("DOMContentLoaded", () => {
-      const token = localStorage.getItem("token");
-      if (token) {
-        window.location.href = "home.html";
+
+    window.addEventListener(
+      "DOMContentLoaded",
+      () => {
+
+        const token =
+          localStorage.getItem("token");
+
+        if (token) {
+
+          window.location.href =
+            "home.html";
+        }
+
       }
-    });
+    );
 
     function switchTab(type){
-      document.getElementById("registerForm").classList.remove("active");
-      document.getElementById("loginForm").classList.remove("active");
 
-      document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+      document
+        .getElementById("registerForm")
+        .classList.remove("active");
+
+      document
+        .getElementById("loginForm")
+        .classList.remove("active");
+
+      document
+        .querySelectorAll(".tab")
+        .forEach(
+          t => t.classList.remove("active")
+        );
 
       if(type === "register"){
-        document.getElementById("registerForm").classList.add("active");
-        document.querySelectorAll(".tab")[0].classList.add("active");
+
+        document
+          .getElementById("registerForm")
+          .classList.add("active");
+
+        document
+          .querySelectorAll(".tab")[0]
+          .classList.add("active");
+
       } else {
-        document.getElementById("loginForm").classList.add("active");
-        document.querySelectorAll(".tab")[1].classList.add("active");
+
+        document
+          .getElementById("loginForm")
+          .classList.add("active");
+
+        document
+          .querySelectorAll(".tab")[1]
+          .classList.add("active");
       }
     }
 
+  </script>
+
+  <!-- MODULE -->
+  <script type="module">
+
+    import {
+      registerUser,
+      loginUser
+    } from "./js/auth.js";
+
     async function handleRegister(){
-      const email = document.getElementById("regEmail").value.trim();
-      const branch = document.getElementById("regBranch").value.trim();
-      const btn = document.getElementById("registerBtn");
+
+      const email =
+        document
+          .getElementById("regEmail")
+          .value.trim();
+
+      const branch =
+        document
+          .getElementById("regBranch")
+          .value.trim();
+
+      const btn =
+        document
+          .getElementById("registerBtn");
 
       if(!email || !branch){
-        alert("Please fill all fields");
+
+        alert(
+          "Please fill all fields"
+        );
+
         return;
       }
 
-      btn.innerText = "Creating...";
+      btn.innerText =
+        "Creating Account...";
+
       btn.disabled = true;
 
       try {
-        await registerUser(email, branch); // uses fixed app.js
-      } catch (err) {
-        alert("Registration failed");
+
+        await registerUser(
+          email,
+          branch
+        );
+
+      } catch(err){
+
+        alert(
+          "Registration failed"
+        );
       }
 
-      btn.innerText = "Create Account →";
+      btn.innerText =
+        "🚀 Create Account";
+
       btn.disabled = false;
     }
 
     async function handleLogin(){
-      const email = document.getElementById("loginEmail").value.trim();
-      const btn = document.getElementById("loginBtn");
+
+      const email =
+        document
+          .getElementById("loginEmail")
+          .value.trim();
+
+      const btn =
+        document
+          .getElementById("loginBtn");
 
       if(!email){
-        alert("Please enter email");
+
+        alert(
+          "Please enter email"
+        );
+
         return;
       }
 
-      btn.innerText = "Logging in...";
+      btn.innerText =
+        "Logging In...";
+
       btn.disabled = true;
 
       try {
-        await loginUser(email); // uses fixed app.js
-      } catch (err) {
-        alert("Login failed");
+
+        await loginUser(email);
+
+      } catch(err){
+
+        alert(
+          "Login failed"
+        );
       }
 
-      btn.innerText = "Continue →";
+      btn.innerText =
+        "🔐 Continue";
+
       btn.disabled = false;
     }
+
+    window.handleRegister =
+      handleRegister;
+
+    window.handleLogin =
+      handleLogin;
+
   </script>
 
-  <script type="module">
-
-import {
-  API_BASE
-} from "./js/config.js";
-
-import {
-  saveAuth
-} from "./js/auth.js";
-
-import {
-  apiRequest
-} from "./js/api.js";
-
-window.addEventListener(
-  "DOMContentLoaded",
-  () => {
-
-    const token =
-      localStorage.getItem("token");
-
-    if (token) {
-      window.location.href =
-        "home.html";
-    }
-  }
-);
-
-// --------------------------------
-// TAB SWITCHING
-// --------------------------------
-window.switchTab = function(type) {
-
-  document
-    .getElementById("registerForm")
-    .classList.remove("active");
-
-  document
-    .getElementById("loginForm")
-    .classList.remove("active");
-
-  document
-    .querySelectorAll(".tab")
-    .forEach(tab => {
-      tab.classList.remove("active");
-    });
-
-  if (type === "register") {
-
-    document
-      .getElementById("registerForm")
-      .classList.add("active");
-
-    document
-      .querySelectorAll(".tab")[0]
-      .classList.add("active");
-
-  } else {
-
-    document
-      .getElementById("loginForm")
-      .classList.add("active");
-
-    document
-      .querySelectorAll(".tab")[1]
-      .classList.add("active");
-  }
-};
-
-// --------------------------------
-// REGISTER
-// --------------------------------
-window.handleRegister =
-async function() {
-
-  const email =
-    document
-      .getElementById("regEmail")
-      .value
-      .trim();
-
-  const branch =
-    document
-      .getElementById("regBranch")
-      .value
-      .trim();
-
-  const btn =
-    document.getElementById(
-      "registerBtn"
-    );
-
-  if (!email || !branch) {
-    alert("Fill all fields");
-    return;
-  }
-
-  btn.innerText = "Creating...";
-  btn.disabled = true;
-
-  try {
-
-    await apiRequest(
-      "/users/register",
-      {
-        method: "POST",
-
-        headers: {
-          "Content-Type":
-            "application/json"
-        },
-
-        body: JSON.stringify({
-          email,
-          branch
-        })
-      }
-    );
-
-    await handleLogin(email);
-
-  } catch (err) {
-
-    alert(
-      err.message ||
-      "Registration failed"
-    );
-
-  } finally {
-
-    btn.innerText =
-      "Create Account →";
-
-    btn.disabled = false;
-  }
-};
-
-// --------------------------------
-// LOGIN
-// --------------------------------
-window.handleLogin =
-async function(customEmail = null) {
-
-  const email =
-    customEmail ||
-    document
-      .getElementById("loginEmail")
-      .value
-      .trim();
-
-  const btn =
-    document.getElementById(
-      "loginBtn"
-    );
-
-  if (!email) {
-    alert("Enter email");
-    return;
-  }
-
-  btn.innerText = "Logging in...";
-  btn.disabled = true;
-
-  try {
-
-    const data =
-      await apiRequest(
-        "/users/login",
-        {
-          method: "POST",
-
-          headers: {
-            "Content-Type":
-              "application/json"
-          },
-
-          body: JSON.stringify({
-            email
-          })
-        }
-      );
-
-    saveAuth(data);
-
-    window.location.href =
-      "home.html";
-
-  } catch (err) {
-
-    alert(
-      err.message ||
-      "Login failed"
-    );
-
-  } finally {
-
-    btn.innerText =
-      "Continue →";
-
-    btn.disabled = false;
-  }
-};
-
-</script>
-
 </body>
+
 </html>
+```
