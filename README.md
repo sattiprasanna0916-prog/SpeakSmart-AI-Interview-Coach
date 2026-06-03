@@ -1,89 +1,261 @@
-# 🎤 SpeakSmart – AI Interview Coach
+# 🎤 SpeakSmart — AI Interview Coach
 
-An AI-powered web application that helps users practice interview questions with real-time feedback on **fluency, grammar, and accuracy**.
+An AI-powered mock interview platform that helps users practice interviews using real-time speech analysis, intelligent feedback, and performance analytics.
 
----
-
-## 🚀 Features
-
-* 🎯 AI-generated interview questions
-* 🎤 Voice-based answer recording
-* 📊 Smart scoring system (Fluency, Grammar, Accuracy)
-* 🤖 AI-generated feedback & improved answers
-* 📈 Analytics dashboard with performance tracking
-* 🔁 Retry system for continuous improvement
-* 🔐 Secure login using JWT authentication
+SpeakSmart simulates realistic interview sessions and evaluates communication skills such as fluency, grammar, and answer accuracy using AI and NLP techniques.
 
 ---
 
-## 🧠 Tech Stack
+# 🚀 Features
 
-### Frontend
+## 🎯 AI Mock Interview Simulation
 
-* HTML, CSS, JavaScript
+* Practice HR and technical interview questions
+* Role-based interview categories
+* Multi-level difficulty support
 
-### Backend
+## 🎤 Voice Recording & Analysis
 
-* FastAPI (Python)
+* Real-time audio recording
+* Speech duration analysis
+* RMS audio feature extraction
+* Pause & filler detection
 
-### AI & Processing
+## 🤖 AI-Powered Feedback
 
-* 🎙️ Wav2Vec2 – Speech processing (optional model)
-* 🧠 Rule-based NLP – Grammar & accuracy scoring
-* 🤖 Groq API (LLM) – Question generation & feedback
+* Fluency evaluation
+* Grammar analysis
+* Accuracy scoring
+* Personalized improvement suggestions
 
-### Data
+## 📊 Analytics Dashboard
 
-* 📊 Hugging Face Dataset – Used for fluency model training
+* Performance tracking
+* Skill progress visualization
+* Interview score analytics
+* Weak skill identification
+
+## 🔐 Authentication System
+
+* User registration & login
+* Local session handling
+* Protected pages
+
+## 🎨 Modern SaaS UI
+
+* Glassmorphism design
+* Responsive layouts
+* Animated microphone recording
+* Premium dark theme
 
 ---
 
-## ⚙️ How to Run
+# 🧠 Tech Stack
 
-### 1️⃣ Clone the Repository
+## Frontend
 
-```bash
-git clone git clone https://github.com/sattiprasanna0916-prog/SpeakSmart-AI-Interview-Coach.git
-cd SpeakSmart-AI
+* HTML5
+* CSS3
+* JavaScript (ES6 Modules)
+
+## Backend
+
+* FastAPI
+* Python
+
+## AI / NLP
+
+* Groq API
+* Whisper Speech-to-Text
+* NLP-based scoring system
+
+## Audio Processing
+
+* Librosa
+* NumPy
+* SoundFile
+
+## Database
+
+* SQLite (Current)
+* PostgreSQL (Planned)
+
+---
+
+# 🏗️ System Architecture
+
+```text
+Frontend (HTML/CSS/JS)
+        ↓
+FastAPI Backend
+        ↓
+AI Services & NLP Analysis
+        ↓
+Database Storage
 ```
 
 ---
 
-### 2️⃣ Run Backend
+# 📁 Project Structure
+
+```text
+SpeakSmart-AI-Interview-Coach/
+│
+├── backend/
+│   ├── ai/
+│   ├── routes/
+│   ├── services/
+│   ├── main.py
+│   └── db.py
+│
+├── frontend/
+│   ├── js/
+│   ├── styles.css
+│   ├── responsive.css
+│   ├── index.html
+│   ├── home.html
+│   ├── practice.html
+│   └── analytics.html
+│
+├── requirements.txt
+├── .gitignore
+└── README.md
+```
+
+---
+
+# ⚙️ Installation & Setup
+
+## 1️⃣ Clone Repository
 
 ```bash
-cd backend
+git clone https://github.com/YOUR_USERNAME/SpeakSmart-AI-Interview-Coach.git
+
+cd SpeakSmart-AI-Interview-Coach
+```
+
+---
+
+## 2️⃣ Create Virtual Environment
+
+```bash
+python -m venv venv
+```
+
+Activate:
+
+### Windows
+
+```bash
+venv\\Scripts\\activate
+```
+
+### Linux/Mac
+
+```bash
+source venv/bin/activate
+```
+
+---
+
+## 3️⃣ Install Dependencies
+
+```bash
 pip install -r requirements.txt
-uvicorn main:app --reload
 ```
 
 ---
 
-### 3️⃣ Open Frontend
+# ▶️ Run Backend
 
-* Open `index.html` in your browser
+```bash
+uvicorn backend.main:app --reload
+```
 
----
+Backend runs at:
 
-## 📌 Project Highlights
-
-* 🔄 End-to-end pipeline: Speech → Analysis → Feedback
-* ⚖️ Weighted scoring system for realistic evaluation
-* 📱 Responsive UI (desktop + mobile friendly)
-* 🧩 Modular backend architecture
-
----
-
-## 🎯 Future Improvements
-
-* Real-time speech evaluation
-* Advanced ML-based scoring
-* Personalized interview paths
+```text
+http://127.0.0.1:8000
+```
 
 ---
 
-## 👨‍💻 Author
+# ▶️ Run Frontend
 
-Developed by **Satti Prasanna Lakshmi**
+Open second terminal:
+
+```bash
+cd frontend
+
+python -m http.server 5500
+```
+
+Frontend runs at:
+
+```text
+http://127.0.0.1:5500/index.html
+```
 
 ---
+
+# 📸 Screenshots
+
+## 🏠 Home Page
+
+(Add Screenshot Here)
+
+## 🎤 Interview Practice
+
+(Add Screenshot Here)
+
+## 📊 Analytics Dashboard
+
+(Add Screenshot Here)
+
+---
+
+# 🔮 Future Improvements
+
+* PostgreSQL integration
+* Cloud deployment
+* AI adaptive interviews
+* Emotion & confidence detection
+* Real-time transcription
+* JWT refresh authentication
+* Advanced LLM evaluation pipeline
+
+---
+
+# 🌟 Why This Project?
+
+SpeakSmart was designed to simulate realistic interview preparation using AI-powered speech analysis and feedback systems.
+
+The project combines:
+
+* Full Stack Development
+* AI Integration
+* Audio Processing
+* NLP Techniques
+* Analytics Dashboards
+* SaaS UI Design
+
+into one complete platform.
+
+---
+
+# 👨‍💻 Author
+
+Developed by Prasanna Lakshmi Satti
+
+Aspiring AI/ML Engineer passionate about:
+
+* Generative AI
+* Full Stack Development
+* Intelligent Systems
+* AI-Powered Applications
+
+---
+
+# ⭐ If You Like This Project
+
+Give this repository a star ⭐ on GitHub!

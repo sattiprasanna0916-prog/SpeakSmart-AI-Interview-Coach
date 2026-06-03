@@ -1,7 +1,10 @@
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from backend.db import get_connection
+from sqlalchemy import text
+
+from backend.db import engine
 
 # --------------------------------
 # ROUTES
@@ -22,102 +25,98 @@ from backend.routes.progress_routes import (
     router as progress_routes
 )
 
-
 # --------------------------------
 # FASTAPI APP
 # --------------------------------
 app = FastAPI(
     title="SpeakSmart API",
-    version="1.0.0"
+    version="2.0.0"
 )
-
 
 # --------------------------------
 # DATABASE INITIALIZATION
 # --------------------------------
 def init_db():
 
-    conn = get_connection()
-    cur = conn.cursor()
+    with engine.connect() as conn:
 
-    try:
-
-        # ----------------------------
         # USERS TABLE
-        # ----------------------------
-        cur.execute(
-            """
-            CREATE TABLE IF NOT EXISTS users (
-                user_id INTEGER PRIMARY KEY AUTOINCREMENT,
-                email TEXT UNIQUE,
-                branch TEXT,
-                current_level TEXT
-            )
-            """
+        conn.execute(text("""
+
+        CREATE TABLE IF NOT EXISTS users (
+
+            user_id SERIAL PRIMARY KEY,
+
+            email VARCHAR(255) UNIQUE,
+
+            branch VARCHAR(255),
+
+            current_level VARCHAR(50)
+
         )
 
-        # ----------------------------
+        """))
+
         # ATTEMPTS TABLE
-        # ----------------------------
-        cur.execute(
-            """
-            CREATE TABLE IF NOT EXISTS attempts (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
+        conn.execute(text("""
 
-                user_id INTEGER,
+        CREATE TABLE IF NOT EXISTS attempts (
 
-                level TEXT,
+            id SERIAL PRIMARY KEY,
 
-                question TEXT,
+            user_id INTEGER,
 
-                answer_text TEXT,
+            level VARCHAR(50),
 
-                audio_duration REAL,
+            question TEXT,
 
-                pause_count INTEGER,
+            answer_text TEXT,
 
-                filler_count INTEGER,
+            audio_duration FLOAT,
 
-                speech_rate REAL,
+            pause_count INTEGER,
 
-                fluency_score REAL,
+            filler_count INTEGER,
 
-                grammar_score REAL,
+            speech_rate FLOAT,
 
-                accuracy_score REAL,
+            fluency_score FLOAT,
 
-                final_score REAL,
+            grammar_score FLOAT,
 
-                feedback TEXT,
+            accuracy_score FLOAT,
 
-                improved_answer TEXT,
+            final_score FLOAT,
 
-                created_at TIMESTAMP
-                DEFAULT CURRENT_TIMESTAMP
-            )
-            """
+            feedback TEXT,
+
+            improved_answer TEXT,
+
+            created_at TIMESTAMP
+            DEFAULT CURRENT_TIMESTAMP
+
         )
+
+        """))
 
         conn.commit()
-
-    finally:
-        conn.close()
-
 
 # --------------------------------
 # INITIALIZE DATABASE
 # --------------------------------
 init_db()
 
-
 # --------------------------------
 # CORS
 # --------------------------------
 app.add_middleware(
+
     CORSMiddleware,
 
     allow_origins=[
+
         "http://localhost:5500",
+
         "http://127.0.0.1:5500",
 
         "https://english-ai-tutor-three.vercel.app"
@@ -130,7 +129,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
 # --------------------------------
 # REGISTER ROUTES
 # --------------------------------
@@ -142,7 +140,6 @@ app.include_router(attempt_routes)
 
 app.include_router(progress_routes)
 
-
 # --------------------------------
 # ROOT ENDPOINT
 # --------------------------------
@@ -150,6 +147,8 @@ app.include_router(progress_routes)
 def root():
 
     return {
+
         "status": "success",
-        "message": "SpeakSmart backend running"
+
+        "message": "SpeakSmart PostgreSQL backend running 🚀"
     }
