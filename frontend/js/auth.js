@@ -20,9 +20,7 @@ export async function registerUser(
     }
   );
 
-  alert(
-    "Registration successful"
-  );
+  localStorage.setItem( "user_id", data.user.user_id ); localStorage.setItem( "user_email", data.user.email ); window.location.href = "home.html";
 
   return data;
 }

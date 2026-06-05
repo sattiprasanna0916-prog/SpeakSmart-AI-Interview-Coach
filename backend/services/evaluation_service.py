@@ -159,8 +159,8 @@ def evaluate_and_update_level(user_id: int):
         cur.execute(
             """
             UPDATE users
-            SET current_level = ?
-            WHERE user_id = ?
+            SET current_level = %s
+            WHERE user_id = %s
             """,
             (
                 new_level,

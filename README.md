@@ -196,33 +196,11 @@ Frontend runs at:
 http://127.0.0.1:5500/index.html
 ```
 
----
-
-# 📸 Screenshots
-
-## 🏠 Home Page
-
-(Add Screenshot Here)
-
-## 🎤 Interview Practice
-
-(Add Screenshot Here)
-
-## 📊 Analytics Dashboard
-
-(Add Screenshot Here)
-
----
-
 # 🔮 Future Improvements
 
-* PostgreSQL integration
-* Cloud deployment
-* AI adaptive interviews
-* Emotion & confidence detection
-* Real-time transcription
-* JWT refresh authentication
-* Advanced LLM evaluation pipeline
+- Emotion & confidence detection using voice analysis 
+- Advanced AI semantic evaluation pipeline 
+- Real-time live transcription during interviews
 
 ---
 
