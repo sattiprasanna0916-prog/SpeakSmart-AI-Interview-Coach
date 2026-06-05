@@ -16,3 +16,6 @@ pandas
 
 librosa
 soundfile
+
+psycopg2-binary
+python-dotenv
