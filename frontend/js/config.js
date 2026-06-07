@@ -8,13 +8,9 @@ const isLocal =
   window.location.hostname === "127.0.0.1";
 
 export const API_BASE =
-
-  isLocal
-
+  window.location.origin.includes("localhost")
     ? "http://127.0.0.1:8000"
-
-    : "https://english-ai-tutor-1.onrender.com";
-
+    : "https://speaksmart-ai-interview-coach.onrender.com";
 export const STORAGE_KEYS = {
 
   TOKEN:"token",
