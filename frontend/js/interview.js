@@ -1,5 +1,5 @@
 import { apiRequest } from "./api.js";
-
+import { API_BASE } from "./config.js";
 import {
   addMessage,
   renderResult,
@@ -59,8 +59,7 @@ export async function startInterview() {
 
 export async function submitAudio() {
 
-  const blob =
-    getAudioBlob();
+  const blob = getAudioBlob();
 
   if (!blob) {
     alert("Record audio first");
@@ -69,42 +68,28 @@ export async function submitAudio() {
 
   const form = new FormData();
 
-  form.append(
-    "audio",
-    blob,
-    "recording.webm"
+  form.append("audio", blob, "recording.webm");
+  form.append("question", currentQuestion);
+  form.append("level", $("level").value);
+
+  const token = localStorage.getItem("token");
+
+  const response = await fetch(
+    `${API_BASE}/attempts/submit`,
+    {
+      method: "POST",
+      headers: {
+        ...(token && {
+          Authorization: `Bearer ${token}`
+        })
+      },
+      body: form
+    }
   );
 
-  form.append(
-    "question",
-    currentQuestion
-  );
-
-  form.append(
-    "level",
-    $("level").value
-  );
-
-  const response =
-    await fetch(
-      "http://127.0.0.1:8000/attempts/submit",
-      {
-        method: "POST",
-
-        headers: {
-          Authorization:
-            `Bearer ${localStorage.getItem("token")}`
-        },
-
-        body: form
-      }
-    );
-
-  const data =
-    await response.json();
+  const data = await response.json();
 
   renderResult(data);
-
   toggleResult(true);
 
   clearAudioBlob();
