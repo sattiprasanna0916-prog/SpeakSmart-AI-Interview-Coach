@@ -1,7 +1,5 @@
-
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-
 from sqlalchemy import text
 
 from backend.db import engine
@@ -9,21 +7,10 @@ from backend.db import engine
 # --------------------------------
 # ROUTES
 # --------------------------------
-from backend.routes.user_routes import (
-    router as user_routes
-)
-
-from backend.routes.question_routes import (
-    router as question_routes
-)
-
-from backend.routes.attempt_routes import (
-    router as attempt_routes
-)
-
-from backend.routes.progress_routes import (
-    router as progress_routes
-)
+from backend.routes.user_routes import router as user_routes
+from backend.routes.question_routes import router as question_routes
+from backend.routes.attempt_routes import router as attempt_routes
+from backend.routes.progress_routes import router as progress_routes
 
 # --------------------------------
 # FASTAPI APP
@@ -42,7 +29,6 @@ def init_db():
 
         # USERS TABLE
         conn.execute(text("""
-
         CREATE TABLE IF NOT EXISTS users (
 
             user_id SERIAL PRIMARY KEY,
@@ -54,12 +40,10 @@ def init_db():
             current_level VARCHAR(50)
 
         )
-
         """))
 
         # ATTEMPTS TABLE
         conn.execute(text("""
-
         CREATE TABLE IF NOT EXISTS attempts (
 
             id SERIAL PRIMARY KEY,
@@ -92,14 +76,13 @@ def init_db():
 
             improved_answer TEXT,
 
-            created_at TIMESTAMP
-            DEFAULT CURRENT_TIMESTAMP
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 
         )
-
         """))
 
         conn.commit()
+
 
 # --------------------------------
 # INITIALIZE DATABASE
@@ -110,10 +93,6 @@ init_db()
 # CORS
 # --------------------------------
 app.add_middleware(
-
-    CORSMiddleware,
-
-    app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "http://localhost:5500",
@@ -124,22 +103,13 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-    allow_credentials=True,
-
-    allow_methods=["*"],
-
-    allow_headers=["*"],
-)
 
 # --------------------------------
 # REGISTER ROUTES
 # --------------------------------
 app.include_router(user_routes)
-
 app.include_router(question_routes)
-
 app.include_router(attempt_routes)
-
 app.include_router(progress_routes)
 
 # --------------------------------
@@ -147,10 +117,7 @@ app.include_router(progress_routes)
 # --------------------------------
 @app.get("/")
 def root():
-
     return {
-
         "status": "success",
-
         "message": "SpeakSmart PostgreSQL backend running 🚀"
     }
