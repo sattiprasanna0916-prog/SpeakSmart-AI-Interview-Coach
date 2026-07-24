@@ -14,28 +14,29 @@ import {
 import { $ } from "./utils.js";
 
 let currentQuestion = "";
+let currentQuestionNumber = 0;
+const TOTAL_QUESTIONS = 5;
 
+// Start Interview / Generate Question
 export async function startInterview() {
 
-  const level =
-    $("level").value;
+  // If interview already finished
+  if (currentQuestionNumber >= TOTAL_QUESTIONS) {
+    alert("🎉 Interview Completed!");
+    return;
+  }
 
-  const role =
-    $("role").value;
-
-  const category =
-    $("category").value;
+  const level = $("level").value;
+  const role = $("role").value;
+  const category = $("category").value;
 
   const data = await apiRequest(
     "/question/generate",
     {
       method: "POST",
-
       headers: {
-        "Content-Type":
-          "application/json"
+        "Content-Type": "application/json"
       },
-
       body: JSON.stringify({
         level,
         role,
@@ -44,19 +45,30 @@ export async function startInterview() {
     }
   );
 
-  currentQuestion =
-    data.question;
+  currentQuestion = data.question;
 
-  $("chatBox").innerHTML = "";
+  // Clear chat only for first question
+  if (currentQuestionNumber === 0) {
+    $("chatBox").innerHTML = "";
+  }
+
+  currentQuestionNumber++;
+
+  // Update progress
+  $("progress").textContent = currentQuestionNumber;
+
+  $("progressFill").style.width =
+    `${(currentQuestionNumber / TOTAL_QUESTIONS) * 100}%`;
 
   addMessage(
     "ai",
-    currentQuestion
+    `Question ${currentQuestionNumber}: ${currentQuestion}`
   );
 
   toggleResult(false);
 }
 
+// Submit Audio
 export async function submitAudio() {
 
   const blob = getAudioBlob();
@@ -93,4 +105,24 @@ export async function submitAudio() {
   toggleResult(true);
 
   clearAudioBlob();
+}
+
+// Next Question
+export async function nextQuestion() {
+
+  if (currentQuestionNumber >= TOTAL_QUESTIONS) {
+
+    alert("🎉 Interview Completed!");
+
+    return;
+  }
+
+  await startInterview();
+}
+
+// Retry Current Question
+export function retryAnswer() {
+
+  toggleResult(false);
+
 }
