@@ -113,15 +113,17 @@ app.add_middleware(
 
     CORSMiddleware,
 
+    app.add_middleware(
+    CORSMiddleware,
     allow_origins=[
-
         "http://localhost:5500",
-
         "http://127.0.0.1:5500",
-
-        "https://english-ai-tutor-three.vercel.app"
+        "https://speak-smart-ai-interview-coach.vercel.app",
     ],
-
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
     allow_credentials=True,
 
     allow_methods=["*"],
