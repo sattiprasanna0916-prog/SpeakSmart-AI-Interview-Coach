@@ -449,17 +449,12 @@
 
     window.logout = logout;
 
-    window.nextQuestion = () => {
-      alert(
-        "Next question feature coming soon"
-      );
-    };
-
+    window.nextQuestion = async () => {
+  await startInterview();
+};
     window.retryAnswer = () => {
-      alert(
-        "Retry feature enabled"
-      );
-    };
+  document.getElementById("resultSection").style.display = "none";
+};
 
   </script>
 
@@ -478,4 +473,4 @@
 
 </body>
 
-</html>
+</html>w
